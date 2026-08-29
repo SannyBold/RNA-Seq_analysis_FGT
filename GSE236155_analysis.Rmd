@@ -1,6 +1,6 @@
 ---
 title: "RNA-seq Analysis for GSE236155"
-author: "B293443"
+author: "Sanny Bold"
 date: "24/03/2025"
 output:
   pdf_document: default
@@ -11,13 +11,13 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-All steps in the pipeline uses code adapted from the Functional Genomic Technologies class materials
+All code adapted from the Functional Genomic Technologies (University of Edinburgh, 2026) class materials
 
 ## Analysis of RNA-seq data using R 
 
 
 ```{r init, echo=F}
-#Load the required libraries & files
+#required libraries & files
 library(Rsubread)
 library(edgeR)
 library(limma)
@@ -30,15 +30,13 @@ library(EnhancedVolcano)
 library(fgsea)
 library(dplyr)
 library(ggplot2)
-load(file = "mytable_feaures")
-#loaded The alignment and annotations of the RNA-sea experiment, assumes current directory is ICA
+load(file = "mytable_feaures") #file containing alignment and annotations of the RNA-seq experiment for experiment GSE236155 prepared by Prof. Simon Tomlinson
 
 
 ```
-Once we have loaded the data we are ready to run some further analysis.
 
 ```{r input_processing, echo=F}
-#Some further processing to access count data and column names.
+#access count data and column names.
 table_rnaseq<-(mytable_feaures)$counts
 colnames_rnaseq <-colnames(table_rnaseq)
 
@@ -56,10 +54,10 @@ adf$ShortGEOName <-substr(adf$Colnames,1,locc[[1]][,"start"]-1)
 #GSM7518956	mouse_OE_2
 #GSM7518957	mouse_OE_3
 
-#My samples are in the same order as the annotaion so I can just create some short names and add to annotation
+#My samples are in the same order as the annotaion so short names created and added to annotation
 adf$ShortNames <-c("mouse_NC_1","mouse_NC_2","mouse_NC_3","mouse_OE_1","mouse_OE_2","mouse_OE_3")
 
-#while I am doing this I will create a factor for the treatment
+#create a factor for the treatment
 split_names <-str_split(adf$ShortNames, pattern="_")
 treatment <-c()
 for(i in 1:length(split_names)){
@@ -67,13 +65,12 @@ for(i in 1:length(split_names)){
 }
 adf$Treatment <- treatment
 
-#Add some colours as well
-#See https://stackoverflow.com/questions/42288075/how-to-autogenerate-color-vector-from-a-numeric-vector
+#https://stackoverflow.com/questions/42288075/how-to-autogenerate-color-vector-from-a-numeric-vector
 z <- factor(adf$Treatment)
 adf$Colours <-rainbow(length(levels(z)))[z]
 
 
-#make sure the colnames of the study match the rownames of the annotation...
+#ensure colnames of study match the rownames of the annotation
 rownames(adf) <-adf$Colnames
 if(identical(colnames_rnaseq,rownames(adf))==FALSE){
   print("Names do not match")
@@ -81,8 +78,8 @@ if(identical(colnames_rnaseq,rownames(adf))==FALSE){
   print("Names match.. OK to proceed")
 }
 
-#OK switch to shortnames to help with the figures
-#We can only swap this way because column order to consistent with adf
+#switch to shortnames to help with the figures
+
 rownames(adf) <-adf$ShortNames
 colnames(table_rnaseq) <-adf$ShortNames
 
@@ -95,7 +92,6 @@ colnames_rnaseq <-colnames(table_rnaseq)
 DESeq2 will used for the statistical analysis and the normalisation of the data. 
 ```{r loading_deseq, echo=F}
 #Create object for DESeq
-#NOTE the design for differential analysis is fed into this object 
 dds_rnaseq <- DESeqDataSetFromMatrix(countData = table_rnaseq,colData = adf,design = ~ Treatment)
 #check the object dimensions
 dim(dds_rnaseq)
@@ -105,7 +101,7 @@ colnames(dds_rnaseq)
 class(dds_rnaseq)
 typeof(dds_rnaseq)
 
-#check what this object contains
+#check contents
 slotNames(dds_rnaseq)
 colnames(colData(dds_rnaseq))
 colnames(assay(dds_rnaseq))
@@ -117,7 +113,7 @@ Apply filters to remove genes that do not pass quality filters.
 
 
 ```{r apply_filters, echo=F}
-#first filter based upon counts
+#filter based upon counts
 keep <- rowSums(counts(dds_rnaseq)) > 1
 dds_rnaseq <- dds_rnaseq[keep,]
 nrow(dds_rnaseq)
@@ -126,13 +122,12 @@ nrow(dds_rnaseq)
 ## Normalisation of Data
 
 ```{r normalisation, echo=F}
-#size factor estimation for normalisation- these are used to scale by library size when data is exported.
+#size factor estimation for normalisation-  used to scale by library size when data is exported.
 dds_rnaseq <- estimateSizeFactors(dds_rnaseq)
 sizeFactors(dds_rnaseq)
 
 ```
 
-## DESeq2 also provides methods that outputs data with various normalisations.
 Multiple normalizations compared. remaining step in the pipeline uses rlog normalization.
 
 
@@ -180,7 +175,7 @@ counts_un_rlog<-rlog(counts_un)
 
 
 
-#We can make an mva.pairs plot for any of these data
+#mva.pairs plot for data
 mva.pairs(counts_un_rlog,na.rm=TRUE, cex=1, main = "MVA plot of samples")
 
 ```
@@ -224,14 +219,13 @@ Simplified stats
 ```{r differential_expression, echo=F}
 dds_rnaseq <- DESeq(dds_rnaseq)
 
-#We should apply this here https://support.bioconductor.org/p/77461/#107693
-#But there is a bug in this version of DESeq2!!
+#lfc shrink not applied due to bug in DESeq2 https://support.bioconductor.org/p/77461/#107693
 #dds_rnaseq <- lfcShrink(dds_rnaseq, coef=2)
 
 
 
 
-#specify a contrast
+#specify contrast
 #note: results(dds, contrast=c("condition","A","B")): genes with logFC > 0 overexpressed in A https://support.bioconductor.org/p/134510/
 result_treatment <-results(dds_rnaseq,contrast=c("Treatment","OE","NC"))
 
@@ -240,7 +234,7 @@ result_treatment <-results(dds_rnaseq,contrast=c("Treatment","OE","NC"))
 
 
 
-#make a nice plot of differential expression
+#plot of differential expression
 plotMA(result_treatment, main="DESeq2 MA plot", ylim=c(-2,2))
 table(result_treatment$padj < 0.01)
 table(result_treatment$padj < 0.05)
@@ -249,7 +243,7 @@ result_treatment <-result_treatment[order(abs(result_treatment$stat),decreasing 
 head(result_treatment)
 ```
 
-## Make heatmaps from each of the output tables- selected top 50 or all using fold change and FDR.
+## Heatmaps from each of the output tables- selected top 50 or all using fold change and FDR.
 
 ```{r differential_expression_heatmaps, echo=F}
 top70 <-rownames(result_treatment)[1:70]
@@ -273,7 +267,7 @@ if(file.exists("resultAnnot.RData")){
   print("Loaded existing Ensembl annotation...")
 }else{
   
-  #UK ensembl is being updated  we use a USA mirror, "useast.ensembl.org"
+  #UK ensembl is being updated, USA mirror used, "useast.ensembl.org"
   ensembl_host <-"https://www.ensembl.org"
   head(biomaRt::listMarts(host = ensembl_host), 15)
   head(biomaRt::listAttributes(biomaRt::useDataset(dataset = "mmusculus_gene_ensembl",mart = useMart("ENSEMBL_MART_ENSEMBL",host = ensembl_host))), 40)
