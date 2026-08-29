@@ -11,7 +11,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-All code adapted from the Functional Genomic Technologies (University of Edinburgh, 2026) class materials
+This analysis was developed from a template markdown provided in the University of Edinburgh Functional Genomic Technologies course (Prof. Simon Tomlinson, 2026). The dataset-specific processing, analysis choices and downstream interpretation were adapted and extended for GSE236155.
 
 ## Analysis of RNA-seq data using R 
 
@@ -135,7 +135,7 @@ Multiple normalizations compared. remaining step in the pipeline uses rlog norma
 
 #Normalised log counts
 counts_rnaseq <-log2(counts(dds_rnaseq, normalized=TRUE) +1)
-#fpm is similar to cpm and discussed here https://rdrr.io/bioc/DESeq2/man/fpm.html.  Here the data is log transformed
+#fpm is similar to cpm and discussed here https://rdrr.io/bioc/DESeq2/man/fpm.html. Here the data is log transformed
 fpm_rnaseq <-log(fpm(dds_rnaseq) +1)#this is also normalised by the sizeFactors
 #rlog and vsd are discussed here https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8
 vsd_rnaseq <- vst(dds_rnaseq, blind = T)
@@ -299,7 +299,7 @@ all(rownames(dds_rnaseq) == rownames(grr))
 resultAnnot <-grr
 all(rownames(dds_rnaseq) == rownames(resultAnnot))
 
-#make the nice names
+#rename to include both ID and gene name where available
 names <- names[idx]
 resultAnnot$ensembl_gene_id <- names
 nice_names<-ifelse(resultAnnot$external_gene_name == resultAnnot$ensembl_gene_id, 
@@ -366,13 +366,13 @@ has_annot <-!has_annot
 result_treatment<-result_treatment[has_annot,]
 rownames(result_treatment)<-result_treatment$gene
 
-#Now we have gene names so we can plot the remaining genes in a volcano plot
+#plot the remaining genes in a volcano plot
 
 #these genes were highlighted as interesting in the paper
 paper_genes <-c("Cd36","Abca1","Abcg1","Abcg2","Abcg3","Abca8a","Abca8b","Abca9","Pparg", "Msr1")
 
 
-#just check they're measured in this annotation
+#check genes are measured in this annotation
 if(sum(paper_genes %in% rownames(result_treatment))==length(paper_genes)){
   print("all genes found in data")
 }
@@ -444,7 +444,6 @@ results$full_name <- rownames(results)
 results$ensembl_gene_id <- sub("_.*$", "", results$full_name)
 
 #grab the hallmark gene set from bioinf.wehi.edu.au
-#generally it is better to cache download results, not download each time, but this file is small!
 download.file("https://bioinf.wehi.edu.au/software/MSigDB/mouse_H_v5p2.rdata", destfile = "mouse_H_v5p2.rdata")
 load("mouse_H_v5p2.rdata")
 
@@ -477,8 +476,7 @@ dim(results2)
 head(results2)
 
 #This analysis takes a ranked list of numbers with entrez IDs as names
-#We need to choose how to order the hits
-#Here I order by stat value
+#order hits by Wald's statistic
 results2 <-results2[order(results2$stat,decreasing=T),]
 
 results2 <-results2[,c("stat","entrezgene_id")]
@@ -491,7 +489,7 @@ rownames(results2)<-results2[,"entrezgene_id"]
 results2["entrezgene_id"] <-NULL
 
 
-#it might want a named vector
+#add names
 rn <-rownames(results2)
 colnames(results2) <-NULL
 results2 <-results2[,1]
