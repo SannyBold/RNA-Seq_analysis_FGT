@@ -136,14 +136,6 @@ Users wishing to reproduce the analysis independently should obtain the correspo
 
 Generated result tables and figures may also be produced when running the R Markdown analysis.
 
-## Project provenance
-
-This repository contains work derived from an MSc Bioinformatics coursework exercise at the **University of Edinburgh**.
-
-The initial R Markdown workflow was based on a teaching template provided in the Functional Genomic Technologies course by **Prof. Simon Tomlinson**. The workflow was adapted for the GSE236155 dataset and extended through dataset-specific processing, visualisation, annotation, differential-expression analysis and downstream gene-set enrichment analysis.
-
-University-provided teaching datasets and prepared input objects are **not redistributed** in this repository.
-
 ## Author
 
 **Sanny Bold**
