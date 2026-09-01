@@ -131,7 +131,8 @@ Users wishing to reproduce the analysis independently should obtain the correspo
 ```text
 .
 ├── README.md
-└──  GSE236155_RNAseq_analysis.Rmd
+├── figures
+└── GSE236155_RNAseq_analysis.Rmd
 ```
 
 Generated result tables and figures may also be produced when running the R Markdown analysis.
