@@ -68,10 +68,10 @@ Annotated results are then used for downstream visualisation and biological inte
 
 The analysis includes:
 
-* PCA plots
+* PCA plot
 * sample-distance heatmaps
-* MA plots
-* volcano plots
+* MA plot
+* volcano plot
 
 A set of genes discussed in the original study is highlighted for comparison with the results of this reanalysis.
 
