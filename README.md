@@ -112,7 +112,7 @@ The RNA-seq experiment analysed here is publicly available through NCBI GEO unde
 
 **GSE236155**
 
-The object used as the starting input for the original coursework analysis, `mytable_feaures`, contained STAR aligned count and annotation data prepared by **Prof. Simon Tomlinson** for the Functional Genomic Technologies course.
+The analysis starts from a course-provided R object named `mytable_feaures` prepared by **Prof. Simon Tomlinson**. The object contains the gene-level count matrix (STAR aligned) used in this analysis, accessed as mytable_feaures$counts. Rows represent mouse Ensembl gene IDs and columns represent the six RNA-seq samples.
 
 **This course-provided object is not distributed in this repository.**
 
