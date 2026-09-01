@@ -11,10 +11,11 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+## Overview
+
 This analysis was developed from a template markdown provided in the University of Edinburgh Functional Genomic Technologies course (Prof. Simon Tomlinson, 2026). The dataset-specific processing, analysis choices and downstream interpretation were adapted and extended for GSE236155.
 
-## Analysis of RNA-seq data using R 
-
+## Setup
 
 ```{r init, echo=F}
 #required libraries & files
@@ -30,12 +31,14 @@ library(EnhancedVolcano)
 library(fgsea)
 library(dplyr)
 library(ggplot2)
-load(file = "mytable_feaures") #file containing alignment and annotations of the RNA-seq experiment for experiment GSE236155 prepared by Prof. Simon Tomlinson
 
 
 ```
+## Input data and sample metadata
 
 ```{r input_processing, echo=F}
+load(file = "mytable_feaures") #file containing alignment and annotations of the RNA-seq experiment 
+#for experiment GSE236155 prepared by Prof. Simon Tomlinson
 #access count data and column names.
 table_rnaseq<-(mytable_feaures)$counts
 colnames_rnaseq <-colnames(table_rnaseq)
@@ -46,7 +49,7 @@ library(stringr)
 locc <- str_locate_all(pattern="Aligned.sortedByCoord.out.bam",adf$Colnames)
 adf$ShortGEOName <-substr(adf$Colnames,1,locc[[1]][,"start"]-1)
 
-#From the GEO page for this study- https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE236155
+#Sample identities from the GEO page for this study- https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE236155
 #GSM7518952	mouse_NC_1
 #GSM7518953	mouse_NC_2
 #GSM7518954	mouse_NC_3
@@ -54,7 +57,8 @@ adf$ShortGEOName <-substr(adf$Colnames,1,locc[[1]][,"start"]-1)
 #GSM7518956	mouse_OE_2
 #GSM7518957	mouse_OE_3
 
-#My samples are in the same order as the annotaion so short names created and added to annotation
+#samples are in the same order as the annotation
+#short names created and added to annotation
 adf$ShortNames <-c("mouse_NC_1","mouse_NC_2","mouse_NC_3","mouse_OE_1","mouse_OE_2","mouse_OE_3")
 
 #create a factor for the treatment
@@ -86,10 +90,10 @@ colnames(table_rnaseq) <-adf$ShortNames
 colnames_rnaseq <-colnames(table_rnaseq)
 
 ```
+## DESeq2 preprocessing
 
+### Gene filtering
 
-## Loading the Data into DESeq
-DESeq2 will used for the statistical analysis and the normalisation of the data. 
 ```{r loading_deseq, echo=F}
 #Create object for DESeq
 dds_rnaseq <- DESeqDataSetFromMatrix(countData = table_rnaseq,colData = adf,design = ~ Treatment)
@@ -119,7 +123,7 @@ dds_rnaseq <- dds_rnaseq[keep,]
 nrow(dds_rnaseq)
 ```
 
-## Normalisation of Data
+### Normalisation and transformation
 
 ```{r normalisation, echo=F}
 #size factor estimation for normalisation-  used to scale by library size when data is exported.
@@ -146,75 +150,27 @@ head(rld_rnaseq, 3)
 
 ```
 
-## Plots with Normalised Data.
+## Exploratory quality assessment
 
-```{r build_plots, echo=F}
-
-counts_rnaseq_ <- counts_rnaseq
-fpm_rnaseq_ <- fpm_rnaseq
-vsd_rnaseq_ <- vsd_rnaseq
-rld_rnaseq_ <- rld_rnaseq
-colnames(counts_rnaseq_) <- c("NC1","NC2","NC3","OE1","OE2","OE3")
-colnames(fpm_rnaseq_) <- c("NC1","NC2","NC3","OE1","OE2","OE3")
-colnames(vsd_rnaseq_) <- c("NC1","NC2","NC3","OE1","OE2","OE3")
-colnames(rld_rnaseq_) <- c("NC1","NC2","NC3","OE1","OE2","OE3")
-#Boxplots
-boxplot(counts_rnaseq_, main="log2 RNA-seq Counts Data", xlab = "Samples", ylab="log2 Counts")
-boxplot(fpm_rnaseq_, main="RNA-seq Fragments per Million (FPM)", xlab = "Samples", ylab="FPM")
-boxplot(assay(vsd_rnaseq_), main="RNA-seq VSD (variance stabilized data)", xlab = "Samples", ylab="VST expression")#etc
-boxplot(assay(rld_rnaseq_), main="RNA-seq RLD (rlog transformed data)", xlab = "Samples", ylab="rlog counts")#etc
-#but suppose we look at non-normalised
-na.rm=T
-counts_un <-counts(dds_rnaseq, normalized=FALSE)+1
-counts_un_ <- counts_un
-colnames(counts_un_) <- c("NC1","NC2","NC3","OE1","OE2","OE3")
-boxplot(log2(counts_un_), main="RNA-seq unnormalized Counts Data", xlab = "Samples", ylab="Counts")
-counts_un_rlog<-rlog(counts_un)
-
-
-
-
-
-#mva.pairs plot for data
-mva.pairs(counts_un_rlog,na.rm=TRUE, cex=1, main = "MVA plot of samples")
-
-```
-
-Exploratory Data Plots (PCA)
+### Principal component analysis
 
 ```{r more_explore, echo=F}
-#we can run a PCA plot here...
 library(scatterplot3d)
 library(ggplot2)
-# Perform PCA
-pca <- prcomp(t(na.omit(assay(rld_rnaseq))), scale=T)
-# Plot the PCA results
-s3d<-scatterplot3d(pca$x[,1:3], pch=19, color=adf$Colours, main="3D PCA plot for samples")
-s3d.coords <- s3d$xyz.convert(pca$x[,1:3])
-text(s3d.coords$x, s3d.coords$y, labels = colnames(rld_rnaseq),pos = 3,offset = 0.5,cex=0.5)
-#or a quick plot in 2d
-qplot(pca$x[,1],pca$x[,2],xlab="PCA1", ylab="PCA2",color=adf$Colours, main = "2D PCA plot for samples")+scale_color_discrete(name="sample", labels=c("mouse_NC", "mouse_OE"))
-#We can also output a distance matrix (euclidean distances between rows/smaples)
-sampleDists <- dist(t(assay(rld_rnaseq)))
-sampleDists
-
+ress <-plotPCA(rld_rnaseq, intgroup = c("Treatment"))
+ress <- ress + geom_label(aes(label = name)) + labs(title = "2D PCA plot of Samples")
+plot(ress)
 ```
-## Generate further heatmaps with the data
+## Sample-distance heatmap
 
 ```{r more_heatmaps, echo=F}
 library("pheatmap")
 library("RColorBrewer")
 sampleDistMatrix <- as.matrix(sampleDists)
 pheatmap(sampleDistMatrix, main = "Heatmap of Sample-to Sample distances")
-#easier PCA plot
-ress <-plotPCA(rld_rnaseq, intgroup = c("Treatment"))
-ress <- ress + geom_label(aes(label = name)) + labs(title = "2D PCA plot of Samples")
-plot(ress)
 ```
 
-
-## Differential Gene Expression
-Simplified stats
+## Differential Expression Analysis
 
 ```{r differential_expression, echo=F}
 dds_rnaseq <- DESeq(dds_rnaseq)
@@ -222,39 +178,19 @@ dds_rnaseq <- DESeq(dds_rnaseq)
 #lfc shrink not applied due to bug in DESeq2 https://support.bioconductor.org/p/77461/#107693
 #dds_rnaseq <- lfcShrink(dds_rnaseq, coef=2)
 
-
-
-
 #specify contrast
 #note: results(dds, contrast=c("condition","A","B")): genes with logFC > 0 overexpressed in A https://support.bioconductor.org/p/134510/
 result_treatment <-results(dds_rnaseq,contrast=c("Treatment","OE","NC"))
 
-
-
-
-
-
-#plot of differential expression
+#MA plot of differential expression
 plotMA(result_treatment, main="DESeq2 MA plot", ylim=c(-2,2))
 table(result_treatment$padj < 0.01)
 table(result_treatment$padj < 0.05)
 result_treatment_selected <- subset(result_treatment, padj < 0.05)
+#Rank genes by the absolute Wald statistic for downstream inspection.
 result_treatment <-result_treatment[order(abs(result_treatment$stat),decreasing = TRUE), ]
 head(result_treatment)
 ```
-
-## Heatmaps from each of the output tables- selected top 50 or all using fold change and FDR.
-
-```{r differential_expression_heatmaps, echo=F}
-top70 <-rownames(result_treatment)[1:70]
-#make a heatmap for the top 70
-pheatmap(assay(rld_rnaseq)[top70,],scale="row",show_rownames=F,main="RLD values, Row Scaled, Top 70")
-#all
-pheatmap(assay(rld_rnaseq)[rownames(result_treatment),],scale="row",show_rownames=F,main="Treatment Selected, Row Scaled")
-
-
-```
-
 
 ## Build Gene Annotation. A serialised is generated in case Ensembl is unavailable
 
@@ -277,10 +213,12 @@ if(file.exists("resultAnnot.RData")){
 }
 
 ```
+## Differential-expression visualisation
 
-Merge Annotation with Input Data
+### Top-ranked gene heatmap
+
 ```{r merge_gene_annotation, echo=F}
-#merge with input data
+#merge annotation with input data
 names <- resultAnnot[,1]
 resultAnnot <- as.data.frame(resultAnnot)
 resultAnnot <- resultAnnot[!duplicated(resultAnnot$ensembl_gene_id), ]
@@ -323,8 +261,7 @@ dev.off()
 pheatmap(assay(plotme),scale="row",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 80, treeheight_col = 100)
 
 ```
-## Final Results Table
-
+## Annotated Results Table
 
 ```{r merge_gene_annotation2, echo=F}
 
@@ -413,8 +350,9 @@ write.csv(as.data.frame(result_treatment[paper_genes,]), "paper_genes.csv")
 
 
 ```
+## Heatmap of genes highlighted in the source study
 
-```{r paper heatmap}
+```{r paper genes heatmap}
 #note rld_rnaseq <- rlog(dds_rnaseq, blind = T)
 papergene_plot <- result_treatment2[result_treatment2$gene %in% paper_genes, ]
 papergene_plot <- papergene_plot[match(paper_genes, papergene_plot$gene), ]
@@ -431,7 +369,7 @@ papergene_plot
 write.csv(papergene_plot, "paper_genes.csv")
 ```
 
-## Functional enrichment analysis using gsea
+## Functional enrichment analysis using FGSEA
 
 ```{r gsea}
 results <-read.csv("result_treatment.csv",header =T, row.names = 1)
