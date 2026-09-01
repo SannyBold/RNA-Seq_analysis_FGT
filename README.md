@@ -18,11 +18,10 @@ The workflow includes:
 * preparation of sample metadata
 * filtering of low-count genes
 * library-size normalisation using DESeq2
-* comparison of expression-data transformations
 * exploratory analysis using PCA and sample-distance heatmaps
 * differential gene-expression analysis with DESeq2
 * annotation of Ensembl gene identifiers using `biomaRt`
-* visualisation of differential expression using MA plots, heatmaps and volcano plots
+* visualisation of differential expression using MA plots and volcano plots
 * examination of genes highlighted in the original study
 * gene-set enrichment analysis using `fgsea`
 * investigation of enriched Hallmark pathways and leading-edge genes
@@ -39,17 +38,11 @@ Genes with very low read counts are removed prior to downstream analysis.
 
 DESeq2 size factors are estimated to account for differences in sequencing depth between samples.
 
-Several transformations are explored, including:
-
-* log-transformed normalised counts
-* fragments per million (FPM)
-* variance-stabilising transformation (VST)
-* regularised log transformation (rlog)
+regularised log transformation (rlog) used for plots
 
 Sample relationships are assessed using:
 
 * principal component analysis (PCA)
-* pairwise sample distances
 * sample-distance heatmaps
 
 ### 3. Differential expression
@@ -63,7 +56,7 @@ The analysis generates:
 * raw p-values
 * multiple-testing-adjusted p-values
 
-Differential-expression results are explored using MA plots, heatmaps and ranked result tables.
+Differential-expression results are explored using the DESeq2 MA plot.
 
 ### 4. Gene annotation
 
@@ -77,7 +70,6 @@ The analysis includes:
 
 * PCA plots
 * sample-distance heatmaps
-* differential-expression heatmaps
 * MA plots
 * volcano plots
 
