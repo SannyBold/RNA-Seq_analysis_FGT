@@ -137,13 +137,13 @@ PCA was used to examine global expression patterns and assess similarity between
 
 ![PCA of RNA-seq samples](figures/sample_pca.png)
 
-**Interpretation:** [Replicates from the same treatment cluster together and there is a clear separation between OE and NC groups with PC1 explaining 89% of the variance.]
+**Interpretation:** Replicates from the same treatment cluster together and there is a clear separation between OE and NC groups with PC1 explaining 89% of the variance.
 
 A sample-distance heatmap provided an additional view of similarity between samples based on rlog-transformed expression values.
 
 ![Sample-distance heatmap](figures/sample_distance_heatmap.png)
 
-**Interpretation:** [within-condition samples were more similar to each other than to samples from the other condition]
+**Interpretation:** within-condition samples were more similar to each other than to samples from the other condition
 
 ### Differential expression
 
