@@ -31,8 +31,6 @@ library(EnhancedVolcano)
 library(fgsea)
 library(dplyr)
 library(ggplot2)
-
-
 ```
 ## Input data and sample metadata
 
@@ -134,7 +132,6 @@ sizeFactors(dds_rnaseq)
 
 Multiple normalizations compared. remaining step in the pipeline uses rlog normalization.
 
-
 ```{r plot_normalised, echo=T}
 
 #Normalised log counts
@@ -146,7 +143,6 @@ vsd_rnaseq <- vst(dds_rnaseq, blind = T)
 head(vsd_rnaseq, 3)
 rld_rnaseq <- rlog(dds_rnaseq, blind = T)
 head(rld_rnaseq, 3)
-
 
 ```
 
@@ -161,11 +157,12 @@ ress <-plotPCA(rld_rnaseq, intgroup = c("Treatment"))
 ress <- ress + geom_label(aes(label = name)) + labs(title = "2D PCA plot of Samples")
 plot(ress)
 ```
-## Sample-distance heatmap
+### Sample-distance heatmap
 
 ```{r more_heatmaps, echo=F}
 library("pheatmap")
 library("RColorBrewer")
+sampleDists <- dist(t(assay(rld_rnaseq)))
 sampleDistMatrix <- as.matrix(sampleDists)
 pheatmap(sampleDistMatrix, main = "Heatmap of Sample-to Sample distances")
 ```
