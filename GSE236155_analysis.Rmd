@@ -127,23 +127,10 @@ nrow(dds_rnaseq)
 #size factor estimation for normalisation-  used to scale by library size when data is exported.
 dds_rnaseq <- estimateSizeFactors(dds_rnaseq)
 sizeFactors(dds_rnaseq)
-
-```
-
-Multiple normalizations compared. remaining step in the pipeline uses rlog normalization.
-
-```{r plot_normalised, echo=T}
-
-#Normalised log counts
-counts_rnaseq <-log2(counts(dds_rnaseq, normalized=TRUE) +1)
-#fpm is similar to cpm and discussed here https://rdrr.io/bioc/DESeq2/man/fpm.html. Here the data is log transformed
-fpm_rnaseq <-log(fpm(dds_rnaseq) +1)#this is also normalised by the sizeFactors
-#rlog and vsd are discussed here https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8
-vsd_rnaseq <- vst(dds_rnaseq, blind = T)
-head(vsd_rnaseq, 3)
+# rlog-transformed counts are used for exploratory sample-level plots
+# and expression heatmaps.
+#rlog discussed here https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8
 rld_rnaseq <- rlog(dds_rnaseq, blind = T)
-head(rld_rnaseq, 3)
-
 ```
 
 ## Exploratory quality assessment
