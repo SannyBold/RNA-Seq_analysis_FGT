@@ -137,6 +137,39 @@ Users wishing to reproduce the analysis independently should obtain the correspo
 
 Generated result tables and figures may also be produced when running the R Markdown analysis.
 
+## Key results
+
+### Sample-level quality assessment
+
+PCA was used to examine global expression patterns and assess similarity between biological replicates.
+
+![PCA of RNA-seq samples](figures/sample_pca.png)
+
+**Interpretation:** [Replicates from the same treatment cluster together and there is a clear separation between OE and NC groups with PC1 explaining 89% of the variance.]
+
+A sample-distance heatmap provided an additional view of similarity between samples based on rlog-transformed expression values.
+
+![Sample-distance heatmap](figures/sample_distance_heatmap.png)
+
+**Interpretation:** [within-condition samples were more similar to each other than to samples from the other condition]
+
+### Differential expression
+
+Differential expression between OE and NC samples was assessed using DESeq2. Positive log2 fold changes indicate higher expression in OE relative to NC.
+
+![Differential-expression volcano plot](figures/volcano_differential_expression.png)
+
+**Interpretation:** The volcano plot summarises both the magnitude and statistical significance of expression changes. Genes highlighted in the source study were labelled to compare the present analysis with previously reported biological findings. Results were consistent with the original volcano plot in the study.
+
+### Functional enrichment analysis
+
+Differential-expression Wald statistics were ranked and analysed against mouse Hallmark gene sets using fgsea.
+
+![Top Hallmark pathways](figures/fgsea_top_pathways.png)
+
+**Interpretation:** Positive normalised enrichment scores indicate pathways enriched toward genes with higher expression in OE, whereas negative scores indicate enrichment toward genes with higher expression in NC. The strongest enriched pathways provide a pathway-level summary of transcriptional differences between the two conditions.
+
+
 ## Author
 
 **Sanny Bold**
